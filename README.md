@@ -111,8 +111,3 @@ Authorization: Bearer <JWT_TOKEN>
 - **JWT (JSON Web Token):** Para la autenticación de usuarios.
 - **Docker (opcional):** Para ejecutar la base de datos MySQL.
 
-<br>
-
-# Licencia
-
-Este código está bajo licencia privada para el uso exclusivo de **Sajuvi**. No está permitido su uso, distribución ni modificación fuera de la organización de Sajuvi sin el consentimiento expreso de los responsables del proyecto.
