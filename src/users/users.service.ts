@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, IsNull } from 'typeorm';
 import { User, UserOnline, UserRole } from './entities/user.entity';
@@ -86,24 +91,21 @@ export class UserService {
   }
 
   // busca un usuario
-  async findOne(username: string, password: string): Promise<User> {
-    const userexist = await this.userRepository.findOne({
+  async login(username: string, password: string): Promise<User> {
+    const user = await this.userRepository.findOne({
       where: {
         username: username,
       },
     });
 
-    if (!userexist) throw new NotFoundException('El usuario no existe');
-    const query = await this.userRepository.findOne({
-      where: {
-        username: username,
-        password: await argon2.hash(password),
-      },
-    });
+    if (!user || user === null)
+      throw new NotFoundException('El usuario no existe');
 
-    if (!query || query === null) throw new Error('Error al iniciar sesion');
+    const compare_password = await argon2.verify(user.password, password);
 
-    return query;
+    if (!compare_password) throw new BadRequestException('Invalid Credentials');
+
+    return user;
   }
 
   async findDeletedUsers(): Promise<User[]> {

@@ -42,7 +42,7 @@ export class UsersController {
 
   @MessagePattern('findOneUser')
   findOne(@Payload() username: string, password: string) {
-    return this.UsersService.findOne(username, password);
+    return this.UsersService.login(username, password);
   }
 
   @MessagePattern({ cmd: 'findDeletedUsers' })
