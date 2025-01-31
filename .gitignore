@@ -3,6 +3,7 @@
 /node_modules
 /build
 /mysql
+/db_data_user
 
 # Logs
 logs

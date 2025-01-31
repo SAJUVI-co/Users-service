@@ -9,6 +9,11 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
-      - ./mysql:/var/lib/mysql
+      - db_data_user:/var/lib/mysql
     ports:
-      - "${DOCKER_DB_PORT}:3306"
+      - '${DOCKER_DB_PORT}:3306'
+    networks:
+      - user_service
+
+volumes:
+  db_data_user:
