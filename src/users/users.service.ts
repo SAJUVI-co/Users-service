@@ -24,9 +24,10 @@ export class UserService {
     const hashedPassword = await argon2.hash(createUserDto.password);
 
     const user: User = this.userRepository.create({
-      username: createUserDto.username,
-      email: createUserDto.email,
-      email_recuperacion: createUserDto.email_recuperacion,
+      ...createUserDto,
+      email_recuperacion: createUserDto.email_recuperacion
+        ? createUserDto.email_recuperacion
+        : createUserDto.email,
       password: hashedPassword,
       rol: UserRole.INVITE, // Rol por defecto
       online: UserOnline.OFFLINE, // Estado por defecto
@@ -91,7 +92,7 @@ export class UserService {
   }
 
   // busca un usuario
-  async login(username: string, password: string): Promise<User> {
+  async findOne(username: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: {
         username: username,
@@ -100,6 +101,13 @@ export class UserService {
 
     if (!user || user === null)
       throw new NotFoundException('El usuario no existe');
+
+    return user;
+  }
+
+  // retorna el usuario que ha iniciado
+  async login(username: string, password: string): Promise<User> {
+    const user = await this.findOne(username);
 
     const compare_password = await argon2.verify(user.password, password);
 

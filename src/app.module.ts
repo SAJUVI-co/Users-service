@@ -1,8 +1,8 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { LoggerMiddleware } from './logger/logger.middleware';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DOCKER_DB_PORT } from './config/envs.config';
 
 class LoggerModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
@@ -12,13 +12,12 @@ class LoggerModule implements NestModule {
 
 @Module({
   imports: [
-    AuthModule,
     UsersModule,
     LoggerModule,
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
-      port: 3307,
+      port: DOCKER_DB_PORT,
       username: 'user_crud',
       password: 'root',
       database: 'db_crud',
