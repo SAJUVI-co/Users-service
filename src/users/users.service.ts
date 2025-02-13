@@ -10,6 +10,7 @@ import { User, UserOnline, UserRole } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as argon2 from 'argon2';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ValidateUserExist } from './dto/search.dto';
 
 @Injectable()
 export class UserService {
@@ -23,8 +24,19 @@ export class UserService {
     return 'hello users service';
   }
 
+  async userExist(validateUserExist: ValidateUserExist): Promise<boolean> {
+    const user_email = await this.findOneByEmail(validateUserExist.email);
+    const user_username = await this.findOne(validateUserExist.username);
+
+    if (user_email) return true;
+    if (user_username) return true;
+    return false;
+  }
+
   // Crea al usuario
   async createUser(createUserDto: CreateUserDto): Promise<User> {
+    // const userExist = this.findOne(createUserDto.username);
+
     const hashedPassword = await argon2.hash(createUserDto.password);
     console.log(hashedPassword);
 
@@ -94,6 +106,20 @@ export class UserService {
     }
 
     return users;
+  }
+
+  // busca un usuario
+  async findOneByEmail(email: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: {
+        email: email,
+      },
+    });
+
+    if (!user || user === null)
+      throw new NotFoundException('El usuario no existe');
+
+    return user;
   }
 
   // busca un usuario
