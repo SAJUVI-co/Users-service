@@ -3,7 +3,8 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { UserService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserRole } from './entities/user.entity';
+import { UserRole, UserWithoutPassword } from './entities/user.entity';
+import { LoginUserDto } from './dto/login-user.dto';
 // import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller()
@@ -11,7 +12,9 @@ export class UsersController {
   constructor(private readonly UsersService: UserService) {}
 
   @MessagePattern('createUser')
-  create(@Payload(new ValidationPipe()) createUserDto: CreateUserDto) {
+  create(
+    @Payload(new ValidationPipe()) createUserDto: CreateUserDto,
+  ): Promise<UserWithoutPassword> {
     return this.UsersService.createUser(createUserDto);
   }
 
@@ -45,9 +48,9 @@ export class UsersController {
     return await this.UsersService.findByRole(role);
   }
 
-  @MessagePattern('findOneUser')
-  findOne(@Payload() username: string, password: string) {
-    return this.UsersService.login(username, password);
+  @MessagePattern('login')
+  findOne(@Payload() loginUserDto: LoginUserDto) {
+    return this.UsersService.login(loginUserDto);
   }
 
   @MessagePattern({ cmd: 'findDeletedUsers' })

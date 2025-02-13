@@ -6,11 +6,17 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, IsNull } from 'typeorm';
-import { User, UserOnline, UserRole } from './entities/user.entity';
+import {
+  User,
+  UserOnline,
+  UserRole,
+  UserWithoutPassword,
+} from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as argon2 from 'argon2';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ValidateUserExist } from './dto/search.dto';
+import { LoginUserDto } from './dto/login-user.dto';
 
 @Injectable()
 export class UserService {
@@ -34,11 +40,8 @@ export class UserService {
   }
 
   // Crea al usuario
-  async createUser(createUserDto: CreateUserDto): Promise<User> {
-    // const userExist = this.findOne(createUserDto.username);
-
+  async createUser(createUserDto: CreateUserDto): Promise<UserWithoutPassword> {
     const hashedPassword = await argon2.hash(createUserDto.password);
-    console.log(hashedPassword);
 
     const user: User = this.userRepository.create({
       ...createUserDto,
@@ -50,9 +53,14 @@ export class UserService {
       online: UserOnline.OFFLINE, // Estado por defecto
     });
 
-    return await this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...userWithoutPassword } = savedUser;
+    return userWithoutPassword;
   }
 
+  //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
   async findAll(): Promise<User[]> {
     const users = await this.userRepository.find();
 
@@ -61,6 +69,7 @@ export class UserService {
     return users;
   }
 
+  //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
   async findAllSortedByCreation(order: 'ASC' | 'DESC'): Promise<User[]> {
     const users = await this.userRepository.find({
       order: { created_at: order },
@@ -72,6 +81,7 @@ export class UserService {
     return users;
   }
 
+  //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
   async findAllSortedByUpdate(order: 'ASC' | 'DESC'): Promise<User[]> {
     const users = await this.userRepository.find({
       order: { updated_at: order },
@@ -83,6 +93,7 @@ export class UserService {
     return users;
   }
 
+  //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
   async findOnlineUsers(): Promise<User[]> {
     const users = await this.userRepository.find({
       where: { online: UserOnline.ONLINE },
@@ -94,6 +105,7 @@ export class UserService {
     return users;
   }
 
+  //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
   async findByRole(role: UserRole): Promise<User[]> {
     const users = await this.userRepository.find({
       where: { rol: role },
@@ -130,6 +142,8 @@ export class UserService {
       },
     });
 
+    console.log(user);
+
     if (!user || user === null)
       throw new NotFoundException('El usuario no existe');
 
@@ -137,14 +151,20 @@ export class UserService {
   }
 
   // retorna el usuario que ha iniciado
-  async login(username: string, password: string): Promise<User> {
-    const user = await this.findOne(username);
+  async login(loginUserDto: LoginUserDto) {
+    console.log(loginUserDto);
 
-    const compare_password = await argon2.verify(user.password, password);
+    const user = await this.findOne(loginUserDto.username);
+    const compare_password = await argon2.verify(
+      user.password,
+      loginUserDto.password,
+    );
 
     if (!compare_password) throw new BadRequestException('Invalid Credentials');
 
-    return user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...userWithoutPassword } = user;
+    return userWithoutPassword;
   }
 
   async findDeletedUsers(): Promise<User[]> {

@@ -18,8 +18,7 @@ export enum UserOnline {
   OFFLINE = 'false',
 }
 
-@Entity()
-export class User {
+export class UserWithoutPassword {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -39,9 +38,6 @@ export class User {
 
   @Column({ comment: 'Correo electrónico de recuperación' })
   email_recuperacion: string;
-
-  @Column({ nullable: false, comment: 'Contraseña del usuario' })
-  password: string;
 
   @Column({
     type: 'enum',
@@ -76,4 +72,10 @@ export class User {
     comment: 'Fecha de eliminación del usuario (soft delete)',
   })
   deleted_at: Date;
+}
+
+@Entity()
+export class User extends UserWithoutPassword {
+  @Column({ nullable: false, comment: 'Contraseña del usuario' })
+  password: string;
 }
