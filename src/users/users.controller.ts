@@ -14,7 +14,7 @@ export class UsersController {
   @MessagePattern('createUser')
   create(
     @Payload(new ValidationPipe()) createUserDto: CreateUserDto,
-  ): Promise<UserWithoutPassword> {
+  ): Promise<boolean> {
     return this.UsersService.createUser(createUserDto);
   }
 

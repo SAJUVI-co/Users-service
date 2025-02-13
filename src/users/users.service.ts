@@ -6,12 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, IsNull } from 'typeorm';
-import {
-  User,
-  UserOnline,
-  UserRole,
-  UserWithoutPassword,
-} from './entities/user.entity';
+import { User, UserOnline, UserRole } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as argon2 from 'argon2';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -40,7 +35,7 @@ export class UserService {
   }
 
   // Crea al usuario
-  async createUser(createUserDto: CreateUserDto): Promise<UserWithoutPassword> {
+  async createUser(createUserDto: CreateUserDto): Promise<boolean> {
     const hashedPassword = await argon2.hash(createUserDto.password);
 
     const user: User = this.userRepository.create({
@@ -54,10 +49,11 @@ export class UserService {
     });
 
     const savedUser = await this.userRepository.save(user);
+    if (!savedUser) return false;
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = savedUser;
-    return userWithoutPassword;
+    return true;
   }
 
   //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
