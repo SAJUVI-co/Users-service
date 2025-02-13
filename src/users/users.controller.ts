@@ -15,6 +15,11 @@ export class UsersController {
     return this.UsersService.createUser(createUserDto);
   }
 
+  // @MessagePattern('tests')
+  // prove(): string {
+  //   return this.UsersService.test();
+  // }
+
   @MessagePattern({ cmd: 'findAllUsers' })
   async findAllUsers() {
     return await this.UsersService.findAll();

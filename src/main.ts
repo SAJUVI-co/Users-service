@@ -2,15 +2,16 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { Logger, ValidationPipe } from '@nestjs/common';
-import { MYSQL_ROOT_PASSWORD } from './config/envs.config';
-
-console.log(MYSQL_ROOT_PASSWORD);
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     AppModule,
     {
       transport: Transport.TCP,
+      options: {
+        host: 'localhost',
+        port: 3001,
+      },
     },
   );
 
