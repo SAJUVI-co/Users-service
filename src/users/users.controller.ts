@@ -24,9 +24,16 @@ export class UsersController {
   // }
 
   @MessagePattern({ cmd: 'findAllUsers' })
-  async findAllUsers({ skip, limit }) {
-    console.log(skip, limit);
-    return await this.UsersService.findAllUsersPages(skip, limit);
+  async findAllUsers({
+    skip,
+    limit,
+    order,
+  }: {
+    skip: number;
+    limit: number;
+    order: 'ASC' | 'DESC';
+  }) {
+    return await this.UsersService.findAllUsersPages(skip, limit, order);
   }
 
   @MessagePattern({ cmd: 'findAll' })

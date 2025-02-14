@@ -64,9 +64,11 @@ export class UserService {
   }
 
   //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
+  //! CHECK
   async findAllUsersPages(
     skip = 0,
     limit = 10,
+    order: 'ASC' | 'DESC',
   ): Promise<{
     users: (UserWithoutPassword & { sequentialId: number })[];
     total: number;
@@ -74,7 +76,7 @@ export class UserService {
     const [users, total] = await this.userRepository.findAndCount({
       skip,
       take: limit,
-      order: { id: 'ASC' },
+      order: { id: order },
     });
 
     if (!users || users.length === 0) {
