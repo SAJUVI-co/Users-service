@@ -167,8 +167,6 @@ export class UserService {
       },
     });
 
-    console.log(user);
-
     if (!user || user === null)
       throw new NotFoundException('El usuario no existe');
 
@@ -182,8 +180,6 @@ export class UserService {
       },
     });
 
-    console.log(user);
-
     if (!user || user === null)
       throw new NotFoundException('El usuario no existe');
 
@@ -192,8 +188,6 @@ export class UserService {
 
   // retorna el usuario que ha iniciado
   async login(loginUserDto: LoginUserDto) {
-    console.log(loginUserDto);
-
     const user = await this.findOneByUsername(loginUserDto.username);
     const compare_password = await argon2.verify(
       user.password,
@@ -239,16 +233,15 @@ export class UserService {
   }
 
   // actualiza el estado online
-  async updateOnlineStatus(user: User) {
+  async updateOnlineStatus(user: UserWithoutPassword) {
     if (!user) {
       throw new NotFoundException(`No se encontró el usuario con ID`);
     }
 
     const user_online = !user.online;
     user.online = user_online;
-    await this.userRepository.save(user);
-
-    return `El estado online del usuario ${user.id} ha sido actualizado a ${user.online}`;
+    const user_updated = await this.userRepository.save(user);
+    return user_updated;
   }
 
   async deleteOne(id: number): Promise<void> {

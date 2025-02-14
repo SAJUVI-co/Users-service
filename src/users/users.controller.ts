@@ -64,9 +64,7 @@ export class UsersController {
   @MessagePattern('login')
   async findOne(@Payload() loginUserDto: LoginUserDto) {
     const user = await this.UsersService.login(loginUserDto);
-    const userWithPassword = { ...user, password: 'defaultPassword' }; // Ensure password is included
-    await this.UsersService.updateOnlineStatus(userWithPassword);
-    return user;
+    return await this.UsersService.updateOnlineStatus(user);
   }
 
   // @MessagePattern({ cmd: 'findDeletedUsers' })
