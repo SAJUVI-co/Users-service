@@ -6,7 +6,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, IsNull } from 'typeorm';
-import { User, UserOnline, UserRole } from './entities/user.entity';
+import {
+  User,
+  UserOnline,
+  UserRole,
+  UserWithoutPassword,
+} from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as argon2 from 'argon2';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -27,7 +32,9 @@ export class UserService {
 
   async userExist(validateUserExist: ValidateUserExist): Promise<boolean> {
     const user_email = await this.findOneByEmail(validateUserExist.email);
-    const user_username = await this.findOne(validateUserExist.username);
+    const user_username = await this.findOneByUsername(
+      validateUserExist.username,
+    );
 
     if (user_email) return true;
     if (user_username) return true;
@@ -57,12 +64,37 @@ export class UserService {
   }
 
   //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
-  async findAll(): Promise<User[]> {
-    const users = await this.userRepository.find();
+  async findAllUsersPages(
+    skip = 0,
+    limit = 10,
+  ): Promise<{
+    users: (UserWithoutPassword & { sequentialId: number })[];
+    total: number;
+  }> {
+    const [users, total] = await this.userRepository.findAndCount({
+      skip,
+      take: limit,
+      order: { id: 'ASC' },
+    });
 
-    if (!users || users.length === 0)
+    if (!users || users.length === 0) {
       throw new NotFoundException('No hay usuarios');
-    return users;
+    }
+
+    const sequentialUsers = users.map((user, index) => ({
+      ...user,
+      password: undefined, // Eliminar el campo password
+      sequentialId: skip + index + 1, // Generar IDs secuenciales
+    }));
+
+    return {
+      users: sequentialUsers,
+      total,
+    };
+  }
+
+  async findAllUsers() {
+    return await this.userRepository.find({});
   }
 
   //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
@@ -131,10 +163,25 @@ export class UserService {
   }
 
   // busca un usuario
-  async findOne(username: string): Promise<User> {
+  async findOneByUsername(username: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: {
         username: username,
+      },
+    });
+
+    console.log(user);
+
+    if (!user || user === null)
+      throw new NotFoundException('El usuario no existe');
+
+    return user;
+  }
+  // busca un usuario
+  async findOneById(id: number): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: id,
       },
     });
 
@@ -150,7 +197,7 @@ export class UserService {
   async login(loginUserDto: LoginUserDto) {
     console.log(loginUserDto);
 
-    const user = await this.findOne(loginUserDto.username);
+    const user = await this.findOneByUsername(loginUserDto.username);
     const compare_password = await argon2.verify(
       user.password,
       loginUserDto.password,
@@ -175,12 +222,12 @@ export class UserService {
     return users;
   }
 
-  async updateUser(udpateUserDto: UpdateUserDto): Promise<User> {
-    const user: UpdateUserDto | null = await this.userRepository.findOne({
-      where: {
-        username: udpateUserDto.username,
-      },
-    });
+  async updateUserSameUser(udpateUserDto: UpdateUserDto): Promise<boolean> {
+    if (!udpateUserDto.id) {
+      throw new BadRequestException('Id is required');
+    }
+
+    const user = await this.findOneById(Number(udpateUserDto.id));
 
     if (!user || user === null)
       throw new NotFoundException(`El usuario no existe`);
@@ -191,7 +238,7 @@ export class UserService {
       `The user ${udpateUserDto.id} has been updated\n${JSON.stringify(user)}`,
     );
 
-    return await this.userRepository.save(user);
+    return (await this.userRepository.save(user)) ? true : false;
   }
 
   // actualiza el estado online

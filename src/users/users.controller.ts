@@ -3,7 +3,7 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { UserService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserRole, UserWithoutPassword } from './entities/user.entity';
+import { UserRole } from './entities/user.entity';
 import { LoginUserDto } from './dto/login-user.dto';
 // import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -24,8 +24,14 @@ export class UsersController {
   // }
 
   @MessagePattern({ cmd: 'findAllUsers' })
-  async findAllUsers() {
-    return await this.UsersService.findAll();
+  async findAllUsers({ skip, limit }) {
+    console.log(skip, limit);
+    return await this.UsersService.findAllUsersPages(skip, limit);
+  }
+
+  @MessagePattern({ cmd: 'findAll' })
+  async findAll() {
+    return await this.UsersService.findAllUsers();
   }
 
   @MessagePattern({ cmd: 'findAllSortedByCreation' })
@@ -60,14 +66,12 @@ export class UsersController {
 
   @MessagePattern('updateUser')
   update(@Payload() updateUserDto: UpdateUserDto) {
-    return this.UsersService.updateUser(updateUserDto);
+    return this.UsersService.updateUserSameUser(updateUserDto);
   }
 
   @MessagePattern({ cmd: 'updateOnlineStatus' })
-  async updateOnlineStatus(
-    @Payload() data: { userId: number; status: boolean },
-  ) {
-    return await this.UsersService.updateOnlineStatus(data.userId, data.status);
+  async updateOnlineStatus(@Payload() data: { id: number; status: boolean }) {
+    return await this.UsersService.updateOnlineStatus(data.id, data.status);
   }
 
   @MessagePattern('removeUser')
