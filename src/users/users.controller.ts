@@ -41,15 +41,15 @@ export class UsersController {
     return await this.UsersService.findAllUsers();
   }
 
-  @MessagePattern({ cmd: 'findAllSortedByCreation' })
-  async findAllSortedByCreation(@Payload() order: 'ASC' | 'DESC') {
-    return await this.UsersService.findAllSortedByCreation(order);
-  }
+  // @MessagePattern({ cmd: 'findAllSortedByCreation' })
+  // async findAllSortedByCreation(@Payload() order: 'ASC' | 'DESC') {
+  //   return await this.UsersService.findAllSortedByCreation(order);
+  // }
 
-  @MessagePattern({ cmd: 'findAllSortedByUpdate' })
-  async findAllSortedByUpdate(@Payload() order: 'ASC' | 'DESC') {
-    return await this.UsersService.findAllSortedByUpdate(order);
-  }
+  // @MessagePattern({ cmd: 'findAllSortedByUpdate' })
+  // async findAllSortedByUpdate(@Payload() order: 'ASC' | 'DESC') {
+  //   return await this.UsersService.findAllSortedByUpdate(order);
+  // }
 
   @MessagePattern({ cmd: 'findOnlineUsers' })
   async findOnlineUsers() {
@@ -62,24 +62,27 @@ export class UsersController {
   }
 
   @MessagePattern('login')
-  findOne(@Payload() loginUserDto: LoginUserDto) {
-    return this.UsersService.login(loginUserDto);
+  async findOne(@Payload() loginUserDto: LoginUserDto) {
+    const user = await this.UsersService.login(loginUserDto);
+    const userWithPassword = { ...user, password: 'defaultPassword' }; // Ensure password is included
+    await this.UsersService.updateOnlineStatus(userWithPassword);
+    return user;
   }
 
-  @MessagePattern({ cmd: 'findDeletedUsers' })
-  async findDeletedUsers() {
-    return await this.UsersService.findDeletedUsers();
-  }
+  // @MessagePattern({ cmd: 'findDeletedUsers' })
+  // async findDeletedUsers() {
+  //   return await this.UsersService.findDeletedUsers();
+  // }
 
   @MessagePattern('updateUser')
   update(@Payload() updateUserDto: UpdateUserDto) {
     return this.UsersService.updateUserSameUser(updateUserDto);
   }
 
-  @MessagePattern({ cmd: 'updateOnlineStatus' })
-  async updateOnlineStatus(@Payload() data: { id: number; status: boolean }) {
-    return await this.UsersService.updateOnlineStatus(data.id, data.status);
-  }
+  // @MessagePattern({ cmd: 'updateOnlineStatus' })
+  // async updateOnlineStatus(@Payload() data: { id: string; status: boolean }) {
+  //   return await this.UsersService.updateOnlineStatus(data.id, data.status);
+  // }
 
   @MessagePattern('removeUser')
   remove(@Payload() id: number) {
