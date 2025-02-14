@@ -6,12 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, IsNull } from 'typeorm';
-import {
-  User,
-  UserOnline,
-  UserRole,
-  UserWithoutPassword,
-} from './entities/user.entity';
+import { User, UserRole, UserWithoutPassword } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as argon2 from 'argon2';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -52,7 +47,7 @@ export class UserService {
         : createUserDto.email,
       password: hashedPassword,
       rol: UserRole.INVITE, // Rol por defecto
-      online: UserOnline.OFFLINE, // Estado por defecto
+      online: false, // Estado por defecto
     });
 
     const savedUser = await this.userRepository.save(user);
@@ -126,7 +121,7 @@ export class UserService {
   //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
   async findOnlineUsers(): Promise<User[]> {
     const users = await this.userRepository.find({
-      where: { online: UserOnline.ONLINE },
+      where: { online: true },
     });
 
     if (!users || users.length === 0)
@@ -244,17 +239,16 @@ export class UserService {
   }
 
   // actualiza el estado online
-  async updateOnlineStatus(userId: number, status: boolean): Promise<string> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-
+  async updateOnlineStatus(user: User) {
     if (!user) {
-      throw new NotFoundException(`No se encontró el usuario con ID ${userId}`);
+      throw new NotFoundException(`No se encontró el usuario con ID`);
     }
 
-    user.online = status ? UserOnline.ONLINE : UserOnline.OFFLINE;
+    const user_online = !user.online;
+    user.online = user_online;
     await this.userRepository.save(user);
 
-    return `El estado online del usuario ${userId} ha sido actualizado a ${status}`;
+    return `El estado online del usuario ${user.id} ha sido actualizado a ${user.online}`;
   }
 
   async deleteOne(id: number): Promise<void> {
