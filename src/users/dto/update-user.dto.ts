@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsEmail,
   IsEnum,
   IsNumber,
@@ -11,11 +12,6 @@ enum UserRole {
   SUPERADMIN = 'sudo',
   ADMIN = 'admin',
   INVITE = 'invite',
-}
-
-enum UserOnline {
-  ONLINE = 'true',
-  OFFLINE = 'false',
 }
 
 export class UpdateUserDto {
@@ -44,6 +40,6 @@ export class UpdateUserDto {
   rol?: UserRole;
 
   @IsOptional()
-  @IsEnum(UserOnline, { message: 'El estado en línea debe ser: true o false' })
-  online?: UserOnline;
+  @IsBoolean({ message: 'El estado debe ser true | false' })
+  online?: boolean;
 }

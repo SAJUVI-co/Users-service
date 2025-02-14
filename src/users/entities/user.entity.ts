@@ -13,11 +13,6 @@ export enum UserRole {
   INVITE = 'invite',
 }
 
-export enum UserOnline {
-  ONLINE = 'true',
-  OFFLINE = 'false',
-}
-
 export class UserWithoutPassword {
   @PrimaryGeneratedColumn()
   id: number;
@@ -49,12 +44,11 @@ export class UserWithoutPassword {
   rol: UserRole;
 
   @Column({
-    type: 'enum',
-    enum: UserOnline,
+    type: 'boolean',
     nullable: false,
     comment: 'Estado de conexión del usuario (online/offline)',
   })
-  online: UserOnline;
+  online: boolean;
 
   @CreateDateColumn({
     nullable: false,
