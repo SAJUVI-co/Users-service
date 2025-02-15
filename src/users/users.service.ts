@@ -95,55 +95,55 @@ export class UserService {
   }
 
   //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
-  async findAllSortedByCreation(order: 'ASC' | 'DESC'): Promise<User[]> {
-    const users = await this.userRepository.find({
-      order: { created_at: order },
-    });
+  // async findAllSortedByCreation(order: 'ASC' | 'DESC'): Promise<User[]> {
+  //   const users = await this.userRepository.find({
+  //     order: { created_at: order },
+  //   });
 
-    if (!users || users.length === 0)
-      throw new NotFoundException('No hay usuarios');
+  //   if (!users || users.length === 0)
+  //     throw new NotFoundException('No hay usuarios');
 
-    return users;
-  }
-
-  //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
-  async findAllSortedByUpdate(order: 'ASC' | 'DESC'): Promise<User[]> {
-    const users = await this.userRepository.find({
-      order: { updated_at: order },
-    });
-
-    if (!users || users.length === 0)
-      throw new NotFoundException('No hay usuarios');
-
-    return users;
-  }
+  //   return users;
+  // }
 
   //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
-  async findOnlineUsers(): Promise<User[]> {
-    const users = await this.userRepository.find({
-      where: { online: true },
-    });
+  // async findAllSortedByUpdate(order: 'ASC' | 'DESC'): Promise<User[]> {
+  //   const users = await this.userRepository.find({
+  //     order: { updated_at: order },
+  //   });
 
-    if (!users || users.length === 0)
-      throw new NotFoundException('No hay usuarios');
+  //   if (!users || users.length === 0)
+  //     throw new NotFoundException('No hay usuarios');
 
-    return users;
-  }
+  //   return users;
+  // }
 
   //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
-  async findByRole(role: UserRole): Promise<User[]> {
-    const users = await this.userRepository.find({
-      where: { rol: role },
-    });
+  // async findOnlineUsers(): Promise<User[]> {
+  //   const users = await this.userRepository.find({
+  //     where: { online: true },
+  //   });
 
-    if (!users.length) {
-      throw new NotFoundException(
-        `No se encontraron usuarios con el rol: ${role}`,
-      );
-    }
+  //   if (!users || users.length === 0)
+  //     throw new NotFoundException('No hay usuarios');
 
-    return users;
-  }
+  //   return users;
+  // }
+
+  //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
+  // async findByRole(role: UserRole): Promise<User[]> {
+  //   const users = await this.userRepository.find({
+  //     where: { rol: role },
+  //   });
+
+  //   if (!users.length) {
+  //     throw new NotFoundException(
+  //       `No se encontraron usuarios con el rol: ${role}`,
+  //     );
+  //   }
+
+  //   return users;
+  // }
 
   // busca un usuario
   async findOneByEmail(email: string): Promise<User> {
@@ -201,17 +201,17 @@ export class UserService {
     return userWithoutPassword;
   }
 
-  async findDeletedUsers(): Promise<User[]> {
-    const users = await this.userRepository.find({
-      where: { deleted_at: Not(IsNull()) }, // Filtra usuarios eliminados
-    });
+  // async findDeletedUsers(): Promise<User[]> {
+  //   const users = await this.userRepository.find({
+  //     where: { deleted_at: Not(IsNull()) }, // Filtra usuarios eliminados
+  //   });
 
-    if (!users || users.length === 0) {
-      throw new NotFoundException('No hay usuarios eliminados');
-    }
+  //   if (!users || users.length === 0) {
+  //     throw new NotFoundException('No hay usuarios eliminados');
+  //   }
 
-    return users;
-  }
+  //   return users;
+  // }
 
   async updateUserSameUser(udpateUserDto: UpdateUserDto): Promise<boolean> {
     if (!udpateUserDto.id) {
@@ -225,9 +225,7 @@ export class UserService {
 
     Object.assign(user, udpateUserDto);
 
-    this.logger.log(
-      `The user ${udpateUserDto.id} has been updated\n${JSON.stringify(user)}`,
-    );
+    this.logger.log(`user ${user.id} has been updated`);
 
     return (await this.userRepository.save(user)) ? true : false;
   }
@@ -244,14 +242,13 @@ export class UserService {
     return user_updated;
   }
 
-  async deleteOne(id: number): Promise<void> {
+  async deleteOne(id: number) {
     const result = await this.userRepository.update(id, {
       deleted_at: new Date(), // Seteamos la fecha actual para "deleted_at"
     });
-
     if (!result || result === null)
       throw new NotFoundException(`El usuario no existe`);
 
-    this.logger.log(`The user ${id} has been deleted`);
+    return 'ok';
   }
 }
