@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not, IsNull } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User, UserRole, UserWithoutPassword } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as argon2 from 'argon2';
