@@ -2,7 +2,13 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { UsersModule } from './users/users.module';
 import { LoggerMiddleware } from './logger/logger.middleware';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DOCKER_DB_PORT } from './config/envs.config';
+import {
+  DOCKER_DB_PORT,
+  MYSQL_DATABASE,
+  MYSQL_HOST,
+  MYSQL_ROOT_PASSWORD,
+  MYSQL_USER,
+} from './config/envs.config';
 
 class LoggerModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
@@ -16,11 +22,11 @@ class LoggerModule implements NestModule {
     LoggerModule,
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: 'localhost',
+      host: MYSQL_HOST,
       port: DOCKER_DB_PORT,
-      username: 'user_crud',
-      password: 'root',
-      database: 'db_crud',
+      username: MYSQL_USER,
+      password: MYSQL_ROOT_PASSWORD,
+      database: MYSQL_DATABASE,
       autoLoadEntities: true,
       synchronize: true, // sincroniza la base de datos con las entidades segun los cambios que se hagan en dev TODO: NO DEBE ESTAR ACTIVADO EN PROD
     }),
