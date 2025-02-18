@@ -1,0 +1,24 @@
+services:
+  mysql_DB:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data_user:/var/lib/mysql
+    ports:
+      - '${DOCKER_DB_PORT}:3306'
+    networks:
+      - service_network
+
+volumes:
+  db_data_user:
+
+networks:
+  service_network:
+    name: service_network
+
