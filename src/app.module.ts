@@ -28,7 +28,7 @@ class LoggerModule implements NestModule {
       password: MYSQL_ROOT_PASSWORD,
       database: MYSQL_DATABASE,
       autoLoadEntities: true,
-      synchronize: true, // sincroniza la base de datos con las entidades segun los cambios que se hagan en dev TODO: NO DEBE ESTAR ACTIVADO EN PROD
+      // synchronize: true, // sincroniza la base de datos con las entidades segun los cambios que se hagan en dev TODO: NO DEBE ESTAR ACTIVADO EN PROD
     }),
   ],
 })

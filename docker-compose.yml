@@ -13,12 +13,25 @@ services:
     ports:
       - '${DOCKER_DB_PORT}:3306'
     networks:
-      - user_service
+      - service_network
+
+  user_service:
+    container_name: user_service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - '${DOCKER_SERVICE_PORT}:5000'
+    networks:
+      - service_network
+    depends_on:
+      - mysql_DB
 
 volumes:
   db_data_user:
 
 networks:
-  user_service:
-    name: user_service
+  service_network:
+    name: service_network
 
