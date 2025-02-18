@@ -36,21 +36,18 @@ Este microservicio permite registrar, autenticar y gestionar usuarios. Está con
 
 Debes configurar las variables de entorno en un archivo `.env` en la raíz del proyecto. Aquí hay un ejemplo de configuración:
 
-```
-env
-CopiarEditar
-MYSQL_USER="nombre_usuario"
-MYSQL_ROOT_PASSWORD="contraseña_root"
-MYSQL_DATABASE="nombre_base_datos"
-MYSQL_PASSWORD="contraseña_mysql"
-MYSQL_HOST="127.0.0.1"
-MYSQL_PORT=3306
+```json
+MYSQL_USER=""
+MYSQL_ROOT_PASSWORD=""
+MYSQL_DATABASE="ud"
+MYSQL_PASSWORD=""
+MYSQL_HOST="" // nombre del contenedor de la db
 
-DOCKER_DB_PORT=3307
+DOCKER_DB_PORT=3306
+DOCKER_SERVICE_PORT=5000
 
-SERVER_HOST="127.0.0.1"
+SERVER_HOST="" // ip en donde se despliega el docker
 SERVER_PORT=5000
-
 ```
 
 ### Descripción de las Variables de Entorno
@@ -61,27 +58,24 @@ SERVER_PORT=5000
 | `MYSQL_ROOT_PASSWORD` | Contraseña del usuario root de MySQL. |
 | `MYSQL_DATABASE` | Nombre de la base de datos donde se almacenarán los usuarios. |
 | `MYSQL_PASSWORD` | Contraseña del usuario de MySQL especificado en `MYSQL_USER`. |
-| `MYSQL_HOST` | Dirección del servidor MySQL. Normalmente es `localhost` o `127.0.0.1` si está en tu máquina. |
+| `MYSQL_HOST` | nombre del contenedor de la db |
 | `MYSQL_PORT` | Puerto del servidor MySQL. Por defecto, es `3306`. |
 | `DOCKER_DB_PORT` | Puerto que el contenedor de la base de datos expondrá en tu máquina local. |
-| `SERVER_HOST` | Dirección del servidor del microservicio. |
+| `SERVER_HOST` | Ip en donde se despliega el docker. |
 | `SERVER_PORT` | Puerto donde se ejecutará el microservicio. |
 
 ---
 
-## Inicialización del Servicio
+## Inicialización del Servicio en modo Desarrollo
 
 ### Inicializar la Base de Datos
 
 Para configurar y levantar la base de datos en un contenedor Docker, utiliza los siguientes comandos:
 
 ```bash
-bash
-CopiarEditar
 docker-compose down
 docker network prune
-docker-compose up --build
-
+docker-compose -f docker-compose-dev.yml up
 ```
 
 ### Iniciar el Servicio en Modo Desarrollo
@@ -89,15 +83,30 @@ docker-compose up --build
 Ejecuta el siguiente conjunto de comandos para instalar las dependencias y levantar el servidor en modo desarrollo:
 
 ```bash
-bash
-CopiarEditar
 pnpm install
 pnpm rebuild
 pnpm start:dev
-
 ```
 
 ---
+
+## Inicialización del Servicio en Produccion
+
+### Inicializar la Base de Datos
+
+Para levantar a produccion es necesario tener bien configuradas las [variables de entorno](###Variables-de-Entorno) para correr el siguiente comando:
+
+```bash
+docker-compose down
+docker network prune
+docker-compose --build
+```
+
+Con ese comando se levanta la base de datos y se dockeriza el repositorio actual junto con las configuraciones del .env que se tengan en ese momento
+
+---
+
+
 
 ## API del Microservicio
 
