@@ -41,12 +41,12 @@ MYSQL_USER=""
 MYSQL_ROOT_PASSWORD=""
 MYSQL_DATABASE="ud"
 MYSQL_PASSWORD=""
-MYSQL_HOST="" // nombre del contenedor de la db
+MYSQL_HOST="0.0.0.0" // nombre del contenedor de la db
 
 DOCKER_DB_PORT=3306
 DOCKER_SERVICE_PORT=5000
 
-SERVER_HOST="" // ip en donde se despliega el docker
+SERVER_HOST="localhost" // ip en donde se despliega el docker
 SERVER_PORT=5000
 ```
 
