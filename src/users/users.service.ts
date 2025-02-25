@@ -12,6 +12,7 @@ import * as argon2 from 'argon2';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ValidateUserExist } from './dto/search.dto';
 import { LoginUserDto } from './dto/login-user.dto';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class UserService {
@@ -37,25 +38,41 @@ export class UserService {
   }
 
   // Crea al usuario
-  async createUser(createUserDto: CreateUserDto): Promise<boolean> {
-    const hashedPassword = await argon2.hash(createUserDto.password);
+  async createUser(createUserDto: CreateUserDto): Promise<any> {
+    try {
+      const hashedPassword = await argon2.hash(createUserDto.password);
 
-    const user: User = this.userRepository.create({
-      ...createUserDto,
-      email_recuperacion: createUserDto.email_recuperacion
-        ? createUserDto.email_recuperacion
-        : createUserDto.email,
-      password: hashedPassword,
-      rol: UserRole.INVITE, // Rol por defecto
-      online: false, // Estado por defecto
-    });
+      const user: User = this.userRepository.create({
+        ...createUserDto,
+        email_recuperacion: createUserDto.email_recuperacion
+          ? createUserDto.email_recuperacion
+          : createUserDto.email,
+        password: hashedPassword,
+        rol: UserRole.INVITE, // Rol por defecto
+        online: false, // Estado por defecto
+      });
 
-    const savedUser = await this.userRepository.save(user);
-    if (!savedUser) return false;
+      const savedUser = await this.userRepository.save(user);
+      if (!savedUser.id) {
+        // console.log()
+        throw new RpcException({
+          message: 'No users found',
+          statusCode: 404,
+        });
+      }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...userWithoutPassword } = savedUser;
-    return true;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...userWithoutPassword } = savedUser;
+      return {
+        access: true,
+        message: userWithoutPassword,
+      };
+    } catch (error) {
+      throw new RpcException({
+        message: error.message || 'Internal Server Error',
+        statusCode: 401,
+      });
+    }
   }
 
   //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
