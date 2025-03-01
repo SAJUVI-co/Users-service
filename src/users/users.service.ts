@@ -10,9 +10,11 @@ import { User, UserRole, UserWithoutPassword } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as argon2 from 'argon2';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ValidateUserExist } from './dto/search.dto';
+// import { ValidateUserExist } from './dto/search.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RpcException } from '@nestjs/microservices';
+import { DateEnum } from './dto/search.dto';
+import { Errors } from 'src/utils/Erros';
 
 @Injectable()
 export class UserService {
@@ -21,21 +23,6 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
-
-  test(): string {
-    return 'hello users service';
-  }
-
-  async userExist(validateUserExist: ValidateUserExist): Promise<boolean> {
-    const user_email = await this.findOneByEmail(validateUserExist.email);
-    const user_username = await this.findOneByUsername(
-      validateUserExist.username,
-    );
-
-    if (user_email) return true;
-    if (user_username) return true;
-    return false;
-  }
 
   // Crea al usuario
   async createUser(createUserDto: CreateUserDto): Promise<any> {
@@ -54,23 +41,31 @@ export class UserService {
 
       const savedUser = await this.userRepository.save(user);
       if (!savedUser.id) {
-        // console.log()
         throw new RpcException({
           message: 'No users found',
           statusCode: 404,
         });
       }
-
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...userWithoutPassword } = savedUser;
       return {
         access: true,
-        message: userWithoutPassword,
+        status: 200,
       };
     } catch (error) {
+      if (error instanceof Error) {
+        const isDuplicateEntry = error.message.includes('Duplicate entry');
+        throw new RpcException({
+          message: isDuplicateEntry
+            ? 'The user already exists. Please use another data.'
+            : error.message,
+          statusCode: 400,
+        });
+      }
+
       throw new RpcException({
-        message: error.message || 'Internal Server Error',
-        statusCode: 401,
+        message: 'Unknown error',
+        statusCode: 500,
       });
     }
   }
@@ -81,47 +76,113 @@ export class UserService {
     skip = 0,
     limit = 10,
     order: 'ASC' | 'DESC',
-  ): Promise<{
-    users: (UserWithoutPassword & { sequentialId: number })[];
-    total: number;
-  }> {
-    const [users, total] = await this.userRepository.findAndCount({
-      skip,
-      take: limit,
-      order: { id: order },
-    });
+  ): Promise<[User[], number]> {
+    try {
+      const users = await this.userRepository.findAndCount({
+        select: [
+          'id',
+          'username',
+          'email',
+          'email_recuperacion',
+          'online',
+          'rol',
+          'created_at',
+          'updated_at',
+        ],
+        skip,
+        take: limit,
+        order: { id: order },
+      });
 
-    if (!users || users.length === 0) {
-      throw new NotFoundException('No hay usuarios');
+      if (users[1] === 0) {
+        throw new RpcException({
+          message: 'Users not found',
+          statusCode: 400,
+        });
+      }
+      return users;
+    } catch (error: any) {
+      if (error instanceof Error) {
+        throw new RpcException({
+          message: error.message,
+          statusCode: 400,
+        });
+      } else {
+        throw new RpcException({
+          message: 'Unknown error',
+          statusCode: 500,
+        });
+      }
     }
-
-    const sequentialUsers = users.map((user, index) => ({
-      ...user,
-      password: undefined, // Eliminar el campo password
-      sequentialId: skip + index + 1, // Generar IDs secuenciales
-    }));
-
-    return {
-      users: sequentialUsers,
-      total,
-    };
-  }
-
-  async findAllUsers() {
-    return await this.userRepository.find({});
   }
 
   //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
-  // async findAllSortedByCreation(order: 'ASC' | 'DESC'): Promise<User[]> {
-  //   const users = await this.userRepository.find({
-  //     order: { created_at: order },
-  //   });
+  async findAllSortedByDate(
+    skip = 0,
+    limit = 10,
+    order: 'ASC' | 'DESC',
+    date: DateEnum,
+  ) {
+    try {
+      let data: object | undefined = undefined;
 
-  //   if (!users || users.length === 0)
-  //     throw new NotFoundException('No hay usuarios');
+      // valida el tipo de solicitud que se desea
+      switch (date) {
+        case DateEnum.delete:
+          data = {
+            order: { deleted_at: order },
+            withDeleted: true,
+          };
+          break;
+        case DateEnum.update:
+          data = {
+            order: { updated_at: order },
+          };
+          break;
 
-  //   return users;
-  // }
+        case DateEnum.create:
+          data = {
+            order: { created_at: order },
+            withDeleted: true,
+          };
+          break;
+
+        default:
+          break;
+      }
+
+      if (data === undefined) Errors.NError('Parameter not found');
+
+      const users = await this.userRepository.find({
+        ...data,
+        select: [
+          'id',
+          'username',
+          'email',
+          'email_recuperacion',
+          'online',
+          'rol',
+          'created_at',
+          'updated_at',
+          'deleted_at',
+        ],
+        withDeleted: true,
+        skip,
+        take: limit,
+      });
+
+      if (!users || users.length === 0)
+        throw new NotFoundException('No hay usuarios');
+
+      return users;
+    } catch (error: any) {
+      if (error instanceof Error) {
+        Errors.NError(error.message);
+      } else {
+        Errors.NError('Unknown error', 500);
+      }
+    }
+  }
 
   //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
   // async findAllSortedByUpdate(order: 'ASC' | 'DESC'): Promise<User[]> {
@@ -163,11 +224,23 @@ export class UserService {
   // }
 
   // busca un usuario
+
   async findOneByEmail(email: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: {
         email: email,
       },
+      select: [
+        'id',
+        'username',
+        'email',
+        'email_recuperacion',
+        'online',
+        'rol',
+        'created_at',
+        'updated_at',
+        'password',
+      ],
     });
 
     if (!user || user === null)
@@ -205,17 +278,28 @@ export class UserService {
 
   // retorna el usuario que ha iniciado
   async login(loginUserDto: LoginUserDto) {
-    const user = await this.findOneByUsername(loginUserDto.username);
-    const compare_password = await argon2.verify(
-      user.password,
-      loginUserDto.password,
-    );
+    try {
+      const user = await this.findOneByUsername(loginUserDto.username);
+      const compare_password = await argon2.verify(
+        user.password,
+        loginUserDto.password,
+      );
 
-    if (!compare_password) throw new BadRequestException('Invalid Credentials');
+      if (!compare_password)
+        throw new RpcException({
+          message: 'Invalid Credentials',
+          statusCode: 401,
+        });
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    } catch (error: any) {
+      throw new RpcException({
+        message: error instanceof Error ? error.message : 'Unknown error',
+        statusCode: 400,
+      });
+    }
   }
 
   // async findDeletedUsers(): Promise<User[]> {

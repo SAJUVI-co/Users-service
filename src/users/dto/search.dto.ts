@@ -7,3 +7,9 @@ export class ValidateUserExist {
   @IsString()
   email: string;
 }
+
+export enum DateEnum {
+  create = 'created_at',
+  update = 'updated_at',
+  delete = 'deleted_at',
+}

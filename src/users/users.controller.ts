@@ -5,6 +5,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 // import { UserRole } from './entities/user.entity';
 import { LoginUserDto } from './dto/login-user.dto';
+import { DateEnum } from './dto/search.dto';
+// import { UserRole } from './entities/user.entity';
 // import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller()
@@ -18,33 +20,48 @@ export class UsersController {
     return this.UsersService.createUser(createUserDto);
   }
 
-  // @MessagePattern('tests')
-  // prove(): string {
-  //   return this.UsersService.test();
-  // }
-
   @MessagePattern({ cmd: 'findAllUsers' })
   async findAllUsers({
     skip,
     limit,
     order,
+    // loginUserDto,
   }: {
     skip: number;
     limit: number;
     order: 'ASC' | 'DESC';
+    // loginUserDto: LoginUserDto;
   }) {
+    //* Valida el rol del usuario para darle permisos de acceso al controlador
+    // const user = await this.UsersService.login(loginUserDto);
+    // if (user.rol === UserRole.INVITE)
+    //   throw new RpcException({
+    //     message: 'Forbidden resource',
+    //     error: 'Forbidden',
+    //     statusCode: 403,
+    //   });
     return await this.UsersService.findAllUsersPages(skip, limit, order);
   }
 
-  @MessagePattern({ cmd: 'findAll' })
-  async findAll() {
-    return await this.UsersService.findAllUsers();
+  @MessagePattern({ cmd: 'findAllSortedByDate' })
+  async findAllSortedByDate({
+    skip,
+    limit,
+    order,
+    date,
+  }: {
+    skip: number;
+    limit: number;
+    order: 'ASC' | 'DESC';
+    date: DateEnum;
+  }) {
+    return await this.UsersService.findAllSortedByDate(
+      skip,
+      limit,
+      order,
+      date,
+    );
   }
-
-  // @MessagePattern({ cmd: 'findAllSortedByCreation' })
-  // async findAllSortedByCreation(@Payload() order: 'ASC' | 'DESC') {
-  //   return await this.UsersService.findAllSortedByCreation(order);
-  // }
 
   // @MessagePattern({ cmd: 'findAllSortedByUpdate' })
   // async findAllSortedByUpdate(@Payload() order: 'ASC' | 'DESC') {
