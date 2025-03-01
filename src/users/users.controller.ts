@@ -63,11 +63,6 @@ export class UsersController {
     );
   }
 
-  // @MessagePattern({ cmd: 'findAllSortedByUpdate' })
-  // async findAllSortedByUpdate(@Payload() order: 'ASC' | 'DESC') {
-  //   return await this.UsersService.findAllSortedByUpdate(order);
-  // }
-
   // @MessagePattern({ cmd: 'findOnlineUsers' })
   // async findOnlineUsers() {
   //   return await this.UsersService.findOnlineUsers();
