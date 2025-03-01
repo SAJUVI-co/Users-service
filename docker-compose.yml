@@ -15,6 +15,18 @@ services:
     networks:
       - service_network
 
+  redis_DB:
+    image: redis:latest
+    container_name: redis_db_storage
+    restart: always
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    ports:
+      - '6379:6379'
+    networks:
+      - service_network
+
   user_service:
     container_name: user_service
     build:
@@ -30,6 +42,7 @@ services:
 
 volumes:
   db_data_user:
+  redis_data:
 
 networks:
   service_network:
