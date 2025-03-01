@@ -181,9 +181,18 @@ export class UserService {
   }
 
   //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
-  async findOnlineUsers(): Promise<User[]> {
+  async findOnlineUsers(
+    skip = 0,
+    limit = 10,
+    order: 'ASC' | 'DESC',
+  ): Promise<User[]> {
     const users = await this.userRepository.find({
       where: { online: true },
+      skip,
+      take: limit,
+      order: {
+        id: order,
+      },
     });
 
     // error si no hay usuarios
@@ -196,10 +205,20 @@ export class UserService {
   }
 
   //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
-  async findByRole(role: UserRole): Promise<User[]> {
+  async findByRole(
+    role: UserRole,
+    skip = 0,
+    limit = 10,
+    order: 'ASC' | 'DESC',
+  ): Promise<User[]> {
     try {
       const users = await this.userRepository.find({
         where: { rol: role },
+        skip,
+        take: limit,
+        order: {
+          id: order,
+        },
       });
 
       // error si no hay usuarios

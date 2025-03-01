@@ -65,13 +65,31 @@ export class UsersController {
   }
 
   @MessagePattern({ cmd: 'findOnlineUsers' })
-  async findOnlineUsers() {
-    return await this.UsersService.findOnlineUsers();
+  async findOnlineUsers({
+    skip,
+    limit,
+    order,
+  }: {
+    skip: number;
+    limit: number;
+    order: 'ASC' | 'DESC';
+  }) {
+    return await this.UsersService.findOnlineUsers(skip, limit, order);
   }
 
   @MessagePattern({ cmd: 'findUsersByRole' })
-  async findUsersByRole(@Payload() role: UserRole) {
-    return await this.UsersService.findByRole(role);
+  async findUsersByRole({
+    role,
+    skip,
+    limit,
+    order,
+  }: {
+    role: UserRole;
+    skip: 0;
+    limit: 10;
+    order: 'ASC' | 'DESC';
+  }) {
+    return await this.UsersService.findByRole(role, skip, limit, order);
   }
 
   @MessagePattern('login')

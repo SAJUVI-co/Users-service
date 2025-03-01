@@ -10,6 +10,8 @@ interface Envs {
   SERVER_HOST: string;
   SERVER_PORT: number;
   DOCKER_DB_PORT: number;
+  REDIS_HOST: string;
+  REDIS_PORT: number;
 }
 
 const schema = joi
@@ -22,6 +24,8 @@ const schema = joi
     DOCKER_DB_PORT: joi.number().required(),
     SERVER_HOST: joi.string().required(),
     SERVER_PORT: joi.number().required(),
+    REDIS_HOST: joi.string().required(),
+    REDIS_PORT: joi.number().required(),
   })
   .unknown(true);
 
@@ -40,4 +44,6 @@ export const {
   MYSQL_HOST,
   SERVER_HOST,
   SERVER_PORT,
+  REDIS_HOST,
+  REDIS_PORT,
 } = data.value as Envs;
