@@ -6,6 +6,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 // import { UserRole } from './entities/user.entity';
 import { LoginUserDto } from './dto/login-user.dto';
 import { DateEnum } from './dto/search.dto';
+import { UserRole } from './entities/user.entity';
 // import { UserRole } from './entities/user.entity';
 // import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -63,36 +64,34 @@ export class UsersController {
     );
   }
 
-  // @MessagePattern({ cmd: 'findOnlineUsers' })
-  // async findOnlineUsers() {
-  //   return await this.UsersService.findOnlineUsers();
-  // }
+  @MessagePattern({ cmd: 'findOnlineUsers' })
+  async findOnlineUsers() {
+    return await this.UsersService.findOnlineUsers();
+  }
 
-  // @MessagePattern({ cmd: 'findUsersByRole' })
-  // async findUsersByRole(@Payload() role: UserRole) {
-  //   return await this.UsersService.findByRole(role);
-  // }
+  @MessagePattern({ cmd: 'findUsersByRole' })
+  async findUsersByRole(@Payload() role: UserRole) {
+    return await this.UsersService.findByRole(role);
+  }
 
   @MessagePattern('login')
   async findOne(@Payload() loginUserDto: LoginUserDto) {
-    const user = await this.UsersService.login(loginUserDto);
-    return await this.UsersService.updateOnlineStatus(user);
+    return await this.UsersService.login(loginUserDto);
   }
-
-  // @MessagePattern({ cmd: 'findDeletedUsers' })
-  // async findDeletedUsers() {
-  //   return await this.UsersService.findDeletedUsers();
-  // }
 
   @MessagePattern('updateUser')
   update(@Payload() updateUserDto: UpdateUserDto) {
+    //! INJECTAR LA VALIDACION DE LA SESCION SOLO PERMITIR ACTUALIZAR
+    // AL USUARIO QUE HA INICIADO LA SESION
+    // - SI EL USUARIO QUIERE ACTUALIZAR A OTROS USUARIOS, DEBE
+    //    TENER EL ROL DE ADMINISTRADOR
     return this.UsersService.updateUserSameUser(updateUserDto);
   }
 
-  // @MessagePattern({ cmd: 'updateOnlineStatus' })
-  // async updateOnlineStatus(@Payload() data: { id: string; status: boolean }) {
-  //   return await this.UsersService.updateOnlineStatus(data.id, data.status);
-  // }
+  @MessagePattern('deleteUser')
+  delete(@Payload() id: number) {
+    return this.UsersService.softDeleteOne(id);
+  }
 
   @MessagePattern('removeUser')
   remove(@Payload() id: number) {

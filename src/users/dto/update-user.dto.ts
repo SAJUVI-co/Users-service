@@ -14,6 +14,12 @@ enum UserRole {
   INVITE = 'invite',
 }
 
+export enum By {
+  email = 'email',
+  email_recuperacion = 'email_recuperacion',
+  username = 'username',
+}
+
 export class UpdateUserDto {
   @IsNumber()
   id: number;

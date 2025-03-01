@@ -1,15 +1,10 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, UserRole, UserWithoutPassword } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as argon2 from 'argon2';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { By, UpdateUserDto } from './dto/update-user.dto';
 // import { ValidateUserExist } from './dto/search.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RpcException } from '@nestjs/microservices';
@@ -102,17 +97,10 @@ export class UserService {
       }
       return users;
     } catch (error: any) {
-      if (error instanceof Error) {
-        throw new RpcException({
-          message: error.message,
-          statusCode: 400,
-        });
-      } else {
-        throw new RpcException({
-          message: 'Unknown error',
-          statusCode: 500,
-        });
-      }
+      throw new RpcException({
+        message: error instanceof Error ? error.message : 'Unknown error',
+        statusCode: 400,
+      });
     }
   }
 
@@ -151,7 +139,12 @@ export class UserService {
           break;
       }
 
-      if (data === undefined) Errors.NError('Parameter not found');
+      // error si no hay parametro
+      if (data === undefined)
+        throw new RpcException({
+          message: 'parameter not found',
+          statusCode: 400,
+        });
 
       const users = await this.userRepository.find({
         ...data,
@@ -171,99 +164,147 @@ export class UserService {
         take: limit,
       });
 
+      // error si Users not found
       if (!users || users.length === 0)
-        throw new NotFoundException('No hay usuarios');
+        throw new RpcException({
+          message: 'Users not found',
+          statusCode: 400,
+        });
 
       return users;
     } catch (error: any) {
-      if (error instanceof Error) {
-        Errors.NError(error.message);
-      } else {
-        Errors.NError('Unknown error', 500);
-      }
+      throw new RpcException({
+        message: error instanceof Error ? error.message : 'Unknown error',
+        statusCode: 400,
+      });
     }
   }
 
   //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
-  // async findAllSortedByUpdate(order: 'ASC' | 'DESC'): Promise<User[]> {
-  //   const users = await this.userRepository.find({
-  //     order: { updated_at: order },
-  //   });
-
-  //   if (!users || users.length === 0)
-  //     throw new NotFoundException('No hay usuarios');
-
-  //   return users;
-  // }
-
-  //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
-  // async findOnlineUsers(): Promise<User[]> {
-  //   const users = await this.userRepository.find({
-  //     where: { online: true },
-  //   });
-
-  //   if (!users || users.length === 0)
-  //     throw new NotFoundException('No hay usuarios');
-
-  //   return users;
-  // }
-
-  //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
-  // async findByRole(role: UserRole): Promise<User[]> {
-  //   const users = await this.userRepository.find({
-  //     where: { rol: role },
-  //   });
-
-  //   if (!users.length) {
-  //     throw new NotFoundException(
-  //       `No se encontraron usuarios con el rol: ${role}`,
-  //     );
-  //   }
-
-  //   return users;
-  // }
-
-  // busca un usuario
-
-  async findOneByEmail(email: string): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: {
-        email: email,
-      },
-      select: [
-        'id',
-        'username',
-        'email',
-        'email_recuperacion',
-        'online',
-        'rol',
-        'created_at',
-        'updated_at',
-        'password',
-      ],
+  async findOnlineUsers(): Promise<User[]> {
+    const users = await this.userRepository.find({
+      where: { online: true },
     });
 
-    if (!user || user === null)
-      throw new NotFoundException('El usuario no existe');
+    // error si no hay usuarios
+    if (!users || users.length === 0)
+      throw new RpcException({
+        message: 'Users not found',
+        statusCode: 400,
+      });
+    return users;
+  }
 
-    return user;
+  //? SE NECESITAN LOS ROLES PARA DAR ACCEESO A ESTE METODO
+  async findByRole(role: UserRole): Promise<User[]> {
+    try {
+      const users = await this.userRepository.find({
+        where: { rol: role },
+      });
+
+      // error si no hay usuarios
+      if (!users || users.length === 0)
+        throw new RpcException({
+          message: 'Users not found',
+          statusCode: 400,
+        });
+
+      return users;
+    } catch (error: any) {
+      throw new RpcException({
+        message: error instanceof Error ? error.message : 'Unknown error',
+        statusCode: 400,
+      });
+    }
+  }
+
+  /**
+   * Busca un usuario en la base de datos según un campo específico.
+   *
+   * @param {By} by - El campo por el cual se desea buscar (email, email_recuperacion o username).
+   * @param {string} value - El valor del campo a consultar.
+   * @returns {Promise<User>} - Retorna el usuario encontrado o lanza una excepción si no existe.
+   *
+   * @throws {NotFoundException} Si el parámetro `by` no es válido.
+   * @throws {RpcException} Si ocurre un error inesperado.
+   *
+   * @example
+   * // Buscar usuario por correo electrónico
+   * const user = await findOneBy(By.email, 'example123@gmail.com');
+   */
+  async findOneBy(by: By, value: string): Promise<User> {
+    try {
+      if (by) Errors.NError('parameter not found');
+
+      let data: object | undefined = undefined;
+
+      // valida que campo es por el que se desea consultar
+      switch (by) {
+        case By.email:
+          data = {
+            email: value,
+          };
+          break;
+
+        case By.email_recuperacion:
+          data = {
+            email_recuperacion: value,
+          };
+          break;
+
+        case By.username:
+          data = {
+            username: value,
+          };
+          break;
+
+        default:
+          break;
+      }
+
+      // si no hay campo al que consultar, lanza error
+      if (data === undefined)
+        throw new RpcException({
+          message: 'Users not found',
+          statusCode: 400,
+        });
+
+      // realiza la consulta
+      const user = await this.userRepository.findOne({
+        where: data,
+        select: [
+          'id',
+          'username',
+          'email',
+          'email_recuperacion',
+          'online',
+          'rol',
+          'created_at',
+          'updated_at',
+          'deleted_at',
+          'password',
+        ],
+        withDeleted: true,
+      });
+
+      // si no hay usuairos, lanza error
+      if (!user || user === null)
+        throw new RpcException({
+          message: 'Users not found',
+          statusCode: 400,
+        });
+
+      return user;
+    } catch (error: any) {
+      throw new RpcException({
+        message: error instanceof Error ? error.message : 'Unknown error',
+        statusCode: 400,
+      });
+    }
   }
 
   // busca un usuario
-  async findOneByUsername(username: string): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: {
-        username: username,
-      },
-    });
-
-    if (!user || user === null)
-      throw new NotFoundException('El usuario no existe');
-
-    return user;
-  }
-  // busca un usuario
-  async findOneById(id: number): Promise<User> {
+  private async findOneById(id: number): Promise<User | null> {
     const user = await this.userRepository.findOne({
       where: {
         id: id,
@@ -271,15 +312,18 @@ export class UserService {
     });
 
     if (!user || user === null)
-      throw new NotFoundException('El usuario no existe');
+      throw new RpcException({
+        message: 'Users not found',
+        statusCode: 400,
+      });
 
     return user;
   }
 
-  // retorna el usuario que ha iniciado
+  // retorna el usuario
   async login(loginUserDto: LoginUserDto) {
     try {
-      const user = await this.findOneByUsername(loginUserDto.username);
+      const user = await this.findOneBy(By.username, loginUserDto.username);
       const compare_password = await argon2.verify(
         user.password,
         loginUserDto.password,
@@ -293,6 +337,10 @@ export class UserService {
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...userWithoutPassword } = user;
+      //! INJECTAR LA VALIDACION DE LA SESCION PARA ACTUALIZAR EL ESTADO
+      // - SI LA SESIION ESTA ABIERTA, NO LA ACTUALIZA
+      // - SI NO, LA ACTUALIZA
+      await this.updateOnlineStatus(userWithoutPassword);
       return userWithoutPassword;
     } catch (error: any) {
       throw new RpcException({
@@ -302,40 +350,49 @@ export class UserService {
     }
   }
 
-  // async findDeletedUsers(): Promise<User[]> {
-  //   const users = await this.userRepository.find({
-  //     where: { deleted_at: Not(IsNull()) }, // Filtra usuarios eliminados
-  //   });
-
-  //   if (!users || users.length === 0) {
-  //     throw new NotFoundException('No hay usuarios eliminados');
-  //   }
-
-  //   return users;
-  // }
-
+  //* Hay que configurarlo para que solo permita realiar los cambios al mismo usuario
+  //  es decir, solo el usuario que tiene la sesion abierta, debe poder
+  //  realizar dichos cambios
+  // - o que se valide el rol del mismo para que permita rezalizar los cambios a otros usuarios
   async updateUserSameUser(udpateUserDto: UpdateUserDto): Promise<boolean> {
-    if (!udpateUserDto.id) {
-      throw new BadRequestException('Id is required');
+    try {
+      if (!udpateUserDto.id)
+        throw new RpcException({
+          message: 'Parameter not found',
+          statusCode: 400,
+        });
+
+      const user = await this.findOneById(Number(udpateUserDto.id));
+
+      if (!user || user === null)
+        throw new RpcException({
+          message: 'Users not found',
+          statusCode: 400,
+        });
+
+      if (user) {
+        Object.assign(user, udpateUserDto);
+        this.logger.log(`user ${user.id} has been updated`);
+      }
+
+      return user && (await this.userRepository.save(user)) ? true : false;
+    } catch (error: any) {
+      throw new RpcException({
+        message: error instanceof Error ? error.message : 'Unknown error',
+        statusCode: 400,
+      });
     }
-
-    const user = await this.findOneById(Number(udpateUserDto.id));
-
-    if (!user || user === null)
-      throw new NotFoundException(`El usuario no existe`);
-
-    Object.assign(user, udpateUserDto);
-
-    this.logger.log(`user ${user.id} has been updated`);
-
-    return (await this.userRepository.save(user)) ? true : false;
   }
 
   // actualiza el estado online
-  async updateOnlineStatus(user: UserWithoutPassword) {
-    if (!user) {
-      throw new NotFoundException(`No se encontró el usuario con ID`);
-    }
+  // * Solo puede cerrar la sesion, si el usuario esta activo,
+  //   si el usuario no esta activo, no realiza el cambio
+  private async updateOnlineStatus(user: UserWithoutPassword) {
+    if (!user)
+      throw new RpcException({
+        message: 'Users not found',
+        statusCode: 400,
+      });
 
     const user_online = !user.online;
     user.online = user_online;
@@ -343,12 +400,24 @@ export class UserService {
     return user_updated;
   }
 
-  async deleteOne(id: number) {
-    const result = await this.userRepository.update(id, {
-      deleted_at: new Date(), // Seteamos la fecha actual para "deleted_at"
-    });
+  async softDeleteOne(id: number) {
+    const result = await this.userRepository.softDelete(id);
     if (!result || result === null)
-      throw new NotFoundException(`El usuario no existe`);
+      throw new RpcException({
+        message: 'User not found',
+        statusCode: 401,
+      });
+
+    return 'ok';
+  }
+
+  async deleteOne(id: number) {
+    const result = await this.userRepository.softDelete(id);
+    if (!result || result === null)
+      throw new RpcException({
+        message: 'User not found',
+        statusCode: 400,
+      });
 
     return 'ok';
   }
