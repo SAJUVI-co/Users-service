@@ -6,17 +6,17 @@ Este microservicio permite registrar, autenticar y gestionar usuarios. Está con
 
 ## Tabla de Contenido
 
-- [Requisitos Previos](##Requisitos-Previos)
-- [Configuración](##Configuración)
-    - [Variables de Entorno](###Variables-de-Entorno)
-- [Inicialización del Servicio](##Inicialización-del-Servicio)
-    - [Inicializaci[on del servicio]](##Inicialización-del-Servicio)
-    - [Inicializar la Base de Datos](###Inicializar-la-Base-de-Datos)
-    - [Iniciar el Servicio en Modo Desarrollo](###Iniciar-el-Servicio-en-Modo-Desarrollo)
-- [API del Microservicio](##API-del-Microservicio)
-    - [Rutas Disponibles](###Rutas-Disponibles)
-    - [Ejemplo de Uso](###Ejemplo-de-Uso)
-- [Manejo de Errores Comunes](##Manejo-de-Errores-Comunes)
+- [Requisitos Previos](#Requisitos-Previos)
+- [Configuración](#Configuracion)
+    - [Variables de Entorno](#Variables-de-Entorno)
+- [Inicialización del Servicio](#Inicialización-del-Servicio)
+    - [Inicializaci[on del servicio]](#Inicialización-del-Servicio)
+    - [Inicializar la Base de Datos](#Inicializar-la-Base-de-Datos)
+    - [Iniciar el Servicio en Modo Desarrollo](#Iniciar-el-Servicio-en-Modo-Desarrollo)
+- [API del Microservicio](#API-del-Microservicio)
+    - [Rutas Disponibles](#Rutas-Disponibles)
+    - [Ejemplo de Uso](#Ejemplo-de-Uso)
+- [Manejo de Errores Comunes](#Manejo-de-Errores-Comunes)
 
 ---
 
